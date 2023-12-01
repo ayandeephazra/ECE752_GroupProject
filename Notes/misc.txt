@@ -1,0 +1,17 @@
+>>> https://doxygen.gem5.org/release/v19-0-0-0/tage__base_8cc_source.html#l00161 
+    [[line     169]]
+    The calcparams  function is assigning history table lengths accordingly. But the number of history tables have been specified earlier.
+
+    [[line     161]]
+    buildTageTables function is creating the tables with the TAGEEntry struct according to the size calculated from above.size
+
+
+>>> Dynamic Tage Paper <stephen pruett>
+    [[Page 1, 2nd Column, A]]
+    The number of history lengths was fixed at 16. The size of each history length is, obviously, geometric. But a table will be assigned to a history length only on determining that it is useful to do so.
+    
+    There is a configuration vector that tells you how many tiles (and hence entries) are present for a particular history length. Thus, here, the config vector will have 16 entries.
+
+    The number of Tage Entries for a table of a particular history length will be determined by the logTagTableSizes std::vector. That is initialized from TAGEBaseParams
+
+    According to the longest history, the tag size has to be determined.

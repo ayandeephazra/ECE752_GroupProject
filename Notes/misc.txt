@@ -1,11 +1,22 @@
->>> https://doxygen.gem5.org/release/v19-0-0-0/tage__base_8cc_source.html#l00161 
-    [[line     169]]
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+>>> tage_base.cc, .hh
+    [[line     169, .cc]]
     The calcparams  function is assigning history table lengths accordingly. But the number of history tables have been specified earlier.
 
-    [[line     161]]
+    [[line     161, .cc]]
     buildTageTables function is creating the tables with the TAGEEntry struct according to the size calculated from above.size
 
+    [[line 116 - 117, .cc]]
+    The tag table widths are different for each table of different history length in traditional TAGE. That is stored in std::vector. The size of this vector has to be equal to the number of history tables (nHistoryTables) + 1 (for the bimodal predictor).
+    The same applies to the std::vector storing the log of the tag table sizes (logTagTableSizes).
 
+    [[line 463, .hh]]
+    A branch could be allocated in multiple tables. We need to keep track of that too. Hence, there is a tableIndices dynamically created array to keep track of that.
+
+    [[line 340, .cc]]
+    TAGEBase::calculateIndicesAndTags calulates gets the index and tag bits for a particular branch (info) from each table and stores it in an dynamically allocated array (whose size is nHistoryTables + 1).
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 >>> Dynamic Tage Paper <stephen pruett>
     [[Page 1, 2nd Column, A]]
     The number of history lengths was fixed at 16. The size of each history length is, obviously, geometric. But a table will be assigned to a history length only on determining that it is useful to do so.
@@ -15,3 +26,18 @@
     The number of Tage Entries for a table of a particular history length will be determined by the logTagTableSizes std::vector. That is initialized from TAGEBaseParams
 
     According to the longest history, the tag size has to be determined.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+>>> TAGE basics <Seznec, André, and Pierre Michaud. “A Case for (Partially) Tagged Geometric History Length Branch Prediction,” n.d.>
+    [[Page 8]]
+    The provider component is the component that provides the prediction, ultimately. The altpred component is the component that would have provided the prediction, if the provider didn't. If there were no tag hits at all, from any component, then the altpred is the default prediction (That would be the default predictor - BiModal). These definitions are important in context of the update policy.
+
+    [[Page 8]]
+    There could be tag matches in different tables (i.e. tables of different history lengths). But the useful counter keeps track if an entry is "useful" in a particular table by checking the following - (only if the altpred and final pred (from provider) are different) AND (the pred was correct) - is the usefulness counter incremented. Otherwise it is decremented (then, two tables with the same prediction would mean that the entry in the table with bigger history length is "useless" => usefulness counter decremented).
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+<<< PLAN OF ACTION >>>
+    -[ ]	 possibly create a function similar to CalcParams that
+    -[x]	 find out what the number of entries is going to be for each table in traditional tage. (it is fixed according to the total size limitation. each table can have different amount of entries.)
+    -[ ]	 functions to change
+       -[ ] 	 	   calculate

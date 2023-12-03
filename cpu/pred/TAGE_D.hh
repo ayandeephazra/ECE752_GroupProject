@@ -112,8 +112,11 @@ class TAGE_D : public TAGE
      * @param b Reference to wrapping pointer to allow storing
      * derived class prediction information in the base class.
      */
-    bool predict(
-        ThreadID tid, Addr branch_pc, bool cond_branch, void* &b) override;
+    bool
+    predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b) override;
+
+    void PostQuantumConfigVectorGeneration();
+
 };
 
 } // namespace branch_prediction

@@ -71,7 +71,7 @@ namespace gem5
 
 	protected:
 	    const uint8_t entries_per_tile; //Number of entries per tile is fixed during runtime.
-	    const uint8_t no_of_tiles; //Number of tiles is fixed during runtime
+	    const uint8_t no_of_tiles ; //Number of tiles is fixed during runtime
 	    struct Dynamic_TAGE_tile{
 		TageEntry *tile_entries; //Pointer to a dynamically allocated array of TageEntries. The number of entries is determined by entries_per_tile value.
 		int32_t tile_ID; //Tile ID can change during runtime. The tileID is gotten from the configuration vector.
@@ -263,7 +263,12 @@ namespace gem5
 	     * Instantiates the TAGE table entries
 	     */
 	    virtual void buildTageTables();
-
+	    
+	    /**
+	     * Dynamically Changes the TAGE Table size according to the configuration vector
+	     */
+	    virtual void dynamicallyConfigTAGETable(std::vector<uint8_t> configuration_vector);
+	    
 	    /**
 	     * Calculates the history lengths
 	     * and some other paramters in derived classes
@@ -332,21 +337,7 @@ namespace gem5
 	    size_t getSizeInBits() const;
 
 	protected:
-	    const unsigned logRatioBiModalHystEntries;
-	    const unsigned nHistoryTables;
-	    const unsigned tagTableCounterBits;
-	    const unsigned tagTableUBits;
-	    const unsigned histBufferSize;
-	    const unsigned minHist;
-	    const unsigned maxHist;
-	    const unsigned pathHistBits;
-
-	    std::vector<unsigned> tagTableTagWidths;
-	    std::vector<int> logTagTableSizes;
-
-	    std::vector<bool> btablePrediction;
-	    std::vector<bool> btableHysteresis;
-	    TageEntry **gtable;
+	     Dynamic_TAGE_tile **dyn_table;
 
 	    // Keep per-thread histories to
 	    // support SMT.

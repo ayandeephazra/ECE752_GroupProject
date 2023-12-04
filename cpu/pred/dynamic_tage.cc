@@ -41,6 +41,8 @@
 #include "base/logging.hh"
 #include "debug/Fetch.hh"
 #include "debug/Tage.hh"
+#include <numeric>
+
 
 namespace gem5
 {
@@ -162,13 +164,26 @@ TAGEBase::initFoldedHistories(ThreadHistory & history)
     }
 }
 
+// void
+// TAGEBase::buildTageTables()
+// {
+//     for (int i = 1; i <= nHistoryTables; i++) {
+//         gtable[i] = new TageEntry[1<<(logTagTableSizes[i])];
+//     }
+// }
+
 void
-TAGEBase::buildTageTables()
-{
-    for (int i = 1; i <= nHistoryTables; i++) {
-        gtable[i] = new TageEntry[1<<(logTagTableSizes[i])];
-    }
+dynamicallyConfigTAGETable(std::vector<uint8_t> configuration_vector){
+  
+  sum_of_tiles = std::accumulate(configuration_vector.begin(), configuration_vector.end(), decltype(configuration_vector)::value_type(0));
+
+  assert(sum_of_tiles <= no_of_tiles);
+  //
+
+
+
 }
+
 
 void
 TAGEBase::calculateParameters()

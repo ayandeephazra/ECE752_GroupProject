@@ -118,16 +118,38 @@ class TAGEBase(SimObject):
         Parent.instShiftAmt, "Number of bits to shift instructions by"
     )
 
-    nHistoryTables = Param.Unsigned(7, "Number of history tables")
+    #nHistoryTables = Param.Unsigned(7, "Number of history tables")
+
+    # project: new number of history tables
+    nHistoryTables = Param.Unsigned(15, "Number of history tables")
+    # project: number of tiles
+    nTiles = Param.Unsigned(31, "Number of Tiles")
+    # prject: number of entries for each tile
+    tile_size = Param.Unsigned(63, "Number of entries in each tile")
+    
     minHist = Param.Unsigned(5, "Minimum history size of TAGE")
     maxHist = Param.Unsigned(130, "Maximum history size of TAGE")
 
+    #tagTableTagWidths = VectorParam.Unsigned(
+    #    [0, 9, 9, 10, 10, 11, 11, 12], "Tag size in TAGE tag tables")
+
+    # project: Tag size for each table
     tagTableTagWidths = VectorParam.Unsigned(
-        [0, 9, 9, 10, 10, 11, 11, 12], "Tag size in TAGE tag tables"
+        [0, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15], "Tag size in TAGE tag tables"
     )
-    logTagTableSizes = VectorParam.Int(
-        [13, 9, 9, 9, 9, 9, 9, 9], "Log2 of TAGE table sizes"
+    # project: first configuration vector
+    configuration_vector_init = VectorParam.Int(
+        16 * [2], "Log2 of TAGE table sizes"
     )
+    #logTagTableSizes = VectorParam.Int(
+    #    [13, 9, 9, 9, 9, 9, 9, 9], "Log2 of TAGE table sizes"
+    #)
+
+    # project: Log2 of TAGE tiles sizes
+    logTagTilesSize = VectorParam.Int(
+        32 * [5], "Log2 of TAGE tiles sizes"
+    )
+    
     logRatioBiModalHystEntries = Param.Unsigned(
         2,
         "Log num of prediction entries for a shared hysteresis bit "
@@ -173,14 +195,6 @@ class TAGE(BranchPredictor):
 
 
 class LTAGE_TAGE(TAGEBase):
-    nHistoryTables = 12
-    minHist = 4
-    maxHist = 640
-    tagTableTagWidths = [0, 7, 7, 8, 8, 9, 10, 11, 12, 12, 13, 14, 15]
-    logTagTableSizes = [14, 10, 10, 11, 11, 11, 11, 10, 10, 10, 10, 9, 9]
-    logUResetPeriod = 19
-    
-class TAGE_D_TAGE(TAGEBase):
     nHistoryTables = 12
     minHist = 4
     maxHist = 640
@@ -414,14 +428,6 @@ class LTAGE(TAGE):
 
     loop_predictor = Param.LoopPredictor(LoopPredictor(), "Loop predictor")
 
-class TAGE_D(TAGE):
-    type = "LTAGE"
-    cxx_class = "gem5::branch_prediction::TAGE_D"
-    cxx_header = "cpu/pred/TAGE_D.hh"
-
-    tage = TAGE_D_TAGE()
-
-    loop_predictor = Param.LoopPredictor(LoopPredictor(), "Loop predictor")
 
 class TAGE_SC_L_LoopPredictor(LoopPredictor):
     type = "TAGE_SC_L_LoopPredictor"

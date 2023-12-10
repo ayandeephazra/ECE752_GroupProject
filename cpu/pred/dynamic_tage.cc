@@ -164,25 +164,31 @@ TAGEBase::initFoldedHistories(ThreadHistory & history)
     }
 }
 
-// void
-// TAGEBase::buildTageTables()
-// {
-//     for (int i = 1; i <= nHistoryTables; i++) {
-//         gtable[i] = new TageEntry[1<<(logTagTableSizes[i])];
-//     }
-// }
-
 void
-dynamicallyConfigTAGETable(std::vector<uint8_t> configuration_vector){
-  
-  sum_of_tiles = std::accumulate(configuration_vector.begin(), configuration_vector.end(), decltype(configuration_vector)::value_type(0));
-
-  assert(sum_of_tiles <= no_of_tiles);
-  //
-
-
-
+TAGEBase::buildTageTables()
+{
+  /*
+    here, we are now trying to allocate a bunch of array of pointers, to an array of pointers. 
+    Thus, a 2D array of pointers is gotten. The pointers in each column correspond to a dynamic TAGE tile. 
+    While, each column represents a dynamic TAGE table. */
+    for (int i = 1; i <= nHistoryTables; i++) {
+        gtable[i] = new *TageEntry[MaxNumberOfTilesInOneTable];
+	/* The above setup allows for a statically assigned max number of pointers to a tile. 
+	   Now, changing a tile from one table to another is simply deallocating memory from one and allocating it in another. */
+    }
 }
+
+// void
+// dynamicallyConfigTAGETable(std::vector<uint8_t> configuration_vector){
+  
+//   sum_of_tiles = std::accumulate(configuration_vector.begin(), configuration_vector.end(), decltype(configuration_vector)::value_type(0));
+
+//   assert(sum_of_tiles <= no_of_tiles);
+//   //
+
+
+
+// }
 
 
 void

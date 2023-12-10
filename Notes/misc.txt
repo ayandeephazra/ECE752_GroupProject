@@ -35,6 +35,15 @@
     [[Page 8]]
     There could be tag matches in different tables (i.e. tables of different history lengths). But the useful counter keeps track if an entry is "useful" in a particular table by checking the following - (only if the altpred and final pred (from provider) are different) AND (the pred was correct) - is the usefulness counter incremented. Otherwise it is decremented (then, two tables with the same prediction would mean that the entry in the table with bigger history length is "useless" => usefulness counter decremented).
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    The fetch unit.cc file uses the branch predictor to get the next pc value. (Seems to be obvious, but yeah...)
+    The branch predictor's predict function is called to get the predicted PC value.
+    the fetch.hh file include the bpred_unit.hh file from the pred folder. Fetch unit uses the bpred_unit class pointer.
+
+    while changing the number of tiles for a partiular history table length, the newly admitted tile entries have to be invalidated.
+    
+    
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
 <<< PLAN OF ACTION >>>
     -[ ]	 possibly create a function similar to CalcParams that

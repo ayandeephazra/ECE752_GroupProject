@@ -170,6 +170,8 @@ TAGEBase::buildTageTables()
     }
 }
 
+  //Calculating the geometric series
+
 void
 TAGEBase::calculateParameters()
 {

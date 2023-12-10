@@ -71,13 +71,13 @@ namespace gem5
 
 	protected:
 	    const uint8_t entries_per_tile; //Number of entries per tile is fixed during runtime.
-	    const uint8_t no_of_tiles ; //Number of tiles is fixed during runtime
-	    struct Dynamic_TAGE_tile{
+	    const uint8_t no_of_tiles ; //Number of tiles is fixed during runtime	   
+	  /*	    struct Dynamic_TAGE_tile{
 		TageEntry *tile_entries; //Pointer to a dynamically allocated array of TageEntries. The number of entries is determined by entries_per_tile value.
 		int32_t tile_ID; //Tile ID can change during runtime. The tileID is gotten from the configuration vector.
 		std::vector<bool> associated_history_length; //Since a tile can be associated to any history length during runtime, this vector mimics the interconnect switch that specifies to which history length this tile is associated to.
 
-	    }
+		}*/
 	    // Prediction Structures
 
 	    // Tage Entry struct from TAGEBase

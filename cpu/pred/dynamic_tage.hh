@@ -71,7 +71,8 @@ namespace gem5
 
 	protected:
 	    const uint8_t entries_per_tile; //Number of entries per tile is fixed during runtime.
-	    const uint8_t no_of_tiles ; //Number of tiles is fixed during runtime	   
+	    const uint8_t no_of_tiles ; //Number of tiles is fixed during runtime
+	    //	    const uint8_t MaxNumberOfTilesInOneTable;
 	  /*	    struct Dynamic_TAGE_tile{
 		TageEntry *tile_entries; //Pointer to a dynamically allocated array of TageEntries. The number of entries is determined by entries_per_tile value.
 		int32_t tile_ID; //Tile ID can change during runtime. The tileID is gotten from the configuration vector.

@@ -165,31 +165,43 @@ TAGEBase::initFoldedHistories(ThreadHistory & history)
 }
 
 void
-TAGEBase::buildTageTables()
+DynamicTAGE::buildTageTables()
 {
   /*
     here, we are now trying to allocate a bunch of array of pointers, to an array of pointers. 
     Thus, a 2D array of pointers is gotten. The pointers in each column correspond to a dynamic TAGE tile. 
     While, each column represents a dynamic TAGE table. */
     for (int i = 1; i <= nHistoryTables; i++) {
-        gtable[i] = new *TageEntry[MaxNumberOfTilesInOneTable];
+        gtable[i] = new TageEntry*[no_of_tiles];
 	/* The above setup allows for a statically assigned max number of pointers to a tile. 
 	   Now, changing a tile from one table to another is simply deallocating memory from one and allocating it in another. */
     }
 }
 
-// void
-// dynamicallyConfigTAGETable(std::vector<uint8_t> configuration_vector){
+void
+DynamicTAGE::dynamicallyConfigTAGETable(std::vector<uint8_t> configuration_vector){
   
-//   sum_of_tiles = std::accumulate(configuration_vector.begin(), configuration_vector.end(), decltype(configuration_vector)::value_type(0));
+  sum_of_tiles = std::accumulate(configuration_vector.begin(), configuration_vector.end(), decltype(configuration_vector)::value_type(0));
 
-//   assert(sum_of_tiles <= no_of_tiles);
-//   //
+  assert(sum_of_tiles <= no_of_tiles);
 
-
-
-// }
-
+  for(int i = 0; i < nHistoryTables + 1; i++) {
+    uint8_t number_of_existing_tiles = size(gtable[i]);
+    
+    if(number_of_existing_tiles > configuration_vector[i]){
+      //deallocate memory from those extra tiles
+      for(int j = configuration_vector[i]; j < number_of_existing_tiles; j++)
+	delete [] gtable[i][j];
+    }
+    
+    else{
+      for(int j = number_of_existing_tiles; j < configuration_vector[i]; j++)
+	//Allocatre memory for new tiles
+	gtable[i][j] = new TageEntry[entries_per_tile];
+    }
+  }
+}
+  
 
 void
 TAGEBase::calculateParameters()

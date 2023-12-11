@@ -130,8 +130,10 @@ class TAGEBase : public SimObject
         int pathHist;
         int ptGhist;
         int hitBank;
+      int hitTile;
         int hitBankIndex;
         int altBank;
+      int altTile;
         int altBankIndex;
         int bimodalIndex;
 

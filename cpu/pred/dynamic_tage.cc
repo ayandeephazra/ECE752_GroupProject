@@ -389,8 +389,19 @@ TAGEBase::getUseAltIdx(BranchInfo* bi, Addr branch_pc)
     return 0;
 }
 
+int
+DynamicTAGE::calcTileIndex(int tableIndex){
+  return currentTableIndex / no_of_tiles;
+}
+
+int
+DynamicTAGE::calcIndexWithinTile(int tableIndex){
+  return currentTableIndex % no_of_tiles;
+}
+
+
 bool
-TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
+DynamicTAGE::tagePredict(ThreadID tid, Addr branch_pc,
               bool cond_branch, BranchInfo* bi)
 {
     Addr pc = branch_pc;
@@ -404,39 +415,67 @@ TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
         bi->bimodalIndex = bindex(pc);
 
         bi->hitBank = 0;
+	bi->hitTile = 0;
         bi->altBank = 0;
+
+	int currentTableIndex = 0;
+	int tileIndex = 0;
+	int indexWithinTile = 0;
+	
         //Look for the bank with longest matching history
         for (int i = nHistoryTables; i > 0; i--) {
-            if (noSkip[i] &&
-                gtable[i][tableIndices[i]].tag == tableTags[i]) {
-                bi->hitBank = i;
-                bi->hitBankIndex = tableIndices[bi->hitBank];
-                break;
-            }
+	  currentTableIndex = bi->tableIndices[i];
+	  tileIndex = calcTileIndex(currentTableIndex);
+	  indexWithinTile = calcIndexWithinTile(currentTableIndex);
+
+	  if (noSkip[i] && gtable[i][tileIndex][indexWithinTile].tag == tableTags[i]) {
+	    bi->hitBank = i;
+	    bi->hitTile = tileIndex;
+	    bi->hitBankIndex = tableIndices[bi->hitBank];
+	    break;
+	  }
+
         }
         //Look for the alternate bank
         for (int i = bi->hitBank - 1; i > 0; i--) {
-            if (noSkip[i] &&
-                gtable[i][tableIndices[i]].tag == tableTags[i]) {
-                bi->altBank = i;
-                bi->altBankIndex = tableIndices[bi->altBank];
-                break;
+	    currentTableIndex = bi->tableIndices[i];
+	    tileIndex = calcTileIndex(currentTableIndex);
+	    indexWithinTile = calcIndexWithinTile(currentTableIndex);
+	    
+            if (noSkip[i] && gtable[i][tileIndex][indexWithinTile].tag == tableTags[i]) {
+	      bi->altBank = i;
+	      bi->altTile = indexWithinTile;
+	      bi->altBankIndex = tableIndices[bi->altBank];
+	      break;
             }
         }
         //computes the prediction and the alternate prediction
         if (bi->hitBank > 0) {
             if (bi->altBank > 0) {
+	      currentTableIndex = tableIndices[bi->altBank];
+	      tileIndex = calcTileIndex(currentTableIndex);
+	      indexWithinTile = calcIndexWithinTile(currentTableIndex);
+	      
                 bi->altTaken =
-                    gtable[bi->altBank][tableIndices[bi->altBank]].ctr >= 0;
+                    gtable[bi->altBank][bi->altTile][indexWithinTile].ctr >= 0;
                 extraAltCalc(bi);
             }else {
                 bi->altTaken = getBimodePred(pc, bi);
             }
-
+	    
+	    currentTableIndex = tableIndices[bi->hitBank];
+	    tileIndex = calcTileIndex(currentTableIndex);
+	    indexWithinTile = calcIndexWithinTile(currentTableIndex);
+	    
             bi->longestMatchPred =
-                gtable[bi->hitBank][tableIndices[bi->hitBank]].ctr >= 0;
+                gtable[bi->hitBank][tileIndex][indexWithinTile].ctr >= 0;
+
+	    currentTableIndex = tableIndices[bi->hitBankIndex];
+	    tileIndex = calcTileIndex(currentTableIndex);
+	    indexWithinTile = calcIndexWithinTile(currentTableIndex);
+	    
             bi->pseudoNewAlloc =
-                abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) <= 1;
+                abs(2 * gtable[bi->hitBank][tileIndex][indexWithinTile].ctr + 1) <= 1;
 
             //if the entry is recognized as a newly allocated entry and
             //useAltPredForNewlyAllocated is positive use the alternate
@@ -480,9 +519,17 @@ TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi,
     if (alloc) {
         // is there some "unuseful" entry to allocate
         uint8_t min = 1;
+	int currentTableIndex = 0;
+	int tileIndex = 0;
+	int indexWithinTile = 0;
+	
         for (int i = nHistoryTables; i > bi->hitBank; i--) {
-            if (gtable[i][bi->tableIndices[i]].u < min) {
-                min = gtable[i][bi->tableIndices[i]].u;
+	  currentTableIndex = bi->tableIndices[i];
+	  tileIndex = calcTileIndex(currentTableIndex);;
+	  indexWithinTile = calcIndexWithinTile(currentTableIndex);
+	  
+            if (gtable[i][tileIndex][indexWithinTile].u < min) {
+	      min = gtable[i][tileIndex][indexWithinTile].u;
             }
         }
 
@@ -492,28 +539,38 @@ TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi,
         int Y = nrand &
             ((1ULL << (nHistoryTables - bi->hitBank - 1)) - 1);
         int X = bi->hitBank + 1;
+       	
         if (Y & 1) {
             X++;
             if (Y & 2)
                 X++;
         }
+
+	currentTableIndex = bi->tableIndices[X];
+	tileIndex = calcTileIndex(currentTableIndex);;
+	indexWithinTile = calcIndexWithinTile(currentTableIndex);	
+		
         // No entry available, forces one to be available
         if (min > 0) {
-            gtable[X][bi->tableIndices[X]].u = 0;
+            gtable[X][tileIndex][indexWithinTile].u = 0;
         }
 
 
         //Allocate entries
         unsigned numAllocated = 0;
         for (int i = X; i <= nHistoryTables; i++) {
-            if (gtable[i][bi->tableIndices[i]].u == 0) {
-                gtable[i][bi->tableIndices[i]].tag = bi->tableTags[i];
-                gtable[i][bi->tableIndices[i]].ctr = (taken) ? 0 : -1;
-                ++numAllocated;
-                if (numAllocated == maxNumAlloc) {
-                    break;
-                }
-            }
+	  currentTableIndex = bi->tableIndices[i];
+	  tileIndex = calcTileIndex(currentTableIndex);;
+	  indexWithinTile = calcIndexWithinTile(currentTableIndex);	
+	  
+	  if (gtable[i][tileIndex][indexWithinTile].u == 0) {
+	    gtable[i][tileIndex][indexWithinTile].tag = bi->tableTags[i];
+	    gtable[i][tileIndex][indexWithinTile].ctr = (taken) ? 0 : -1;
+	    ++numAllocated;
+	    if (numAllocated == maxNumAlloc) {
+	      break;
+	    }
+	  }
         }
     }
 
@@ -529,13 +586,18 @@ TAGEBase::handleUReset()
     if ((tCounter & ((1ULL << logUResetPeriod) - 1)) == 0) {
         // reset least significant bit
         // most significant bit becomes least significant bit
-        for (int i = 1; i <= nHistoryTables; i++) {
-            for (int j = 0; j < (1ULL << logTagTableSizes[i]); j++) {
-                resetUctr(gtable[i][j].u);
-            }
+      for (int i = 1; i <= nHistoryTables; i++) {
+	for (int j = 0; j < (1ULL << logTagTableSizes[i]); j++) {
+	  //accessing each tile
+	  for (int tileEntry = 0; j < entries_per_tile; j++) {
+	    //added this loop to access the tile entry		
+	    resetUctr(gtable[i][j][tileEntry].u);
+	  }
         }
+      }
     }
 }
+
 
 void
 TAGEBase::resetUctr(uint8_t & u)
@@ -587,34 +649,55 @@ TAGEBase::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
 void
 TAGEBase::handleTAGEUpdate(Addr branch_pc, bool taken, BranchInfo* bi)
 {
-    if (bi->hitBank > 0) {
-        DPRINTF(Tage, "Updating tag table entry (%d,%d) for branch %lx\n",
-                bi->hitBank, bi->hitBankIndex, branch_pc);
-        ctrUpdate(gtable[bi->hitBank][bi->hitBankIndex].ctr, taken,
-                  tagTableCounterBits);
-        // if the provider entry is not certified to be useful also update
-        // the alternate prediction
-        if (gtable[bi->hitBank][bi->hitBankIndex].u == 0) {
-            if (bi->altBank > 0) {
-                ctrUpdate(gtable[bi->altBank][bi->altBankIndex].ctr, taken,
-                          tagTableCounterBits);
-                DPRINTF(Tage, "Updating tag table entry (%d,%d) for"
-                        " branch %lx\n", bi->hitBank, bi->hitBankIndex,
-                        branch_pc);
-            }
-            if (bi->altBank == 0) {
-                baseUpdate(branch_pc, taken, bi);
-            }
-        }
-
-        // update the u counter
-        if (bi->tagePred != bi->altTaken) {
-            unsignedCtrUpdate(gtable[bi->hitBank][bi->hitBankIndex].u,
-                              bi->tagePred == taken, tagTableUBits);
-        }
-    } else {
-        baseUpdate(branch_pc, taken, bi);
+  
+  int currentTableIndex = 0;
+  int tileIndex = 0;
+  int indexWithinTile = 0;
+  
+  if (bi->hitBank > 0) {
+    DPRINTF(Tage, "Updating tag table entry (%d,%d) for branch %lx\n",
+	    bi->hitBank, bi->hitBankIndex, branch_pc);
+    
+    currentTableIndex = bi->hitBankIndex;
+    tileIndex = calcTileIndex(currentTableIndex);;
+    indexWithinTile = calcIndexWithinTile(currentTableIndex);	
+    
+    ctrUpdate(gtable[bi->hitBank][tileIndex][indexWithinTile].ctr, taken,
+	      tagTableCounterBits);
+    
+    // if the provider entry is not certified to be useful also update
+    // the alternate prediction
+    if (gtable[bi->hitBank][tileIndex][indexWithinTile].u == 0) {
+      if (bi->altBank > 0) {
+	currentTableIndex = bi->altBankIndex;
+	tileIndex = calcTileIndex(currentTableIndex);;
+	indexWithinTile = calcIndexWithinTile(currentTableIndex);	
+	
+	ctrUpdate(gtable[bi->altBank][tileIndex][indexWithinTile].ctr, taken,
+		  tagTableCounterBits);
+	DPRINTF(Tage, "Updating tag table entry (%d,%d) for"
+		" branch %lx\n", bi->hitBank, bi->hitBankIndex,
+		branch_pc);
+      }
+      if (bi->altBank == 0) {
+	baseUpdate(branch_pc, taken, bi);
+      }
     }
+    
+    
+    currentTableIndex = bi->hitBankIndex;
+    tileIndex = calcTileIndex(currentTableIndex);;
+    indexWithinTile = calcIndexWithinTile(currentTableIndex);	
+    
+    
+    // update the u counter
+    if (bi->tagePred != bi->altTaken) {
+      unsignedCtrUpdate(gtable[bi->hitBank][tileIndex][indexWithinTile].u,
+			bi->tagePred == taken, tagTableUBits);
+    }
+  } else {
+    baseUpdate(branch_pc, taken, bi);
+  }
 }
 
 void
@@ -800,7 +883,11 @@ TAGEBase::TAGEBaseStats::TAGEBaseStats(
 int8_t
 TAGEBase::getCtr(int hitBank, int hitBankIndex) const
 {
-    return gtable[hitBank][hitBankIndex].ctr;
+  int currentTableIndex = bi->hitBankIndex;
+  tileIndex = calcTileIndex(currentTableIndex);;
+  indexWithinTile = calcIndexWithinTile(currentTableIndex);	
+  
+  return gtable[hitBank][tileIndex][indexWithinTile].ctr;
 }
 
 unsigned

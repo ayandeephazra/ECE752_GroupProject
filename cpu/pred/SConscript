@@ -41,7 +41,7 @@ SimObject('BranchPredictor.py', sim_objects=[
     'MultiperspectivePerceptronTAGE', 'MPP_StatisticalCorrector_64KB',
     'MultiperspectivePerceptronTAGE64KB', 'MPP_TAGE_8KB',
     'MPP_LoopPredictor_8KB', 'MPP_StatisticalCorrector_8KB',
-    'MultiperspectivePerceptronTAGE8KB'])
+    'MultiperspectivePerceptronTAGE8KB', 'DynamicTAGE'])
 
 DebugFlag('Indirect')
 Source('bpred_unit.cc')
@@ -66,6 +66,7 @@ Source('statistical_corrector.cc')
 Source('tage_sc_l.cc')
 Source('tage_sc_l_8KB.cc')
 Source('tage_sc_l_64KB.cc')
+Source('dynamic_tage.cc')
 DebugFlag('FreeList')
 DebugFlag('Branch')
 DebugFlag('Tage')

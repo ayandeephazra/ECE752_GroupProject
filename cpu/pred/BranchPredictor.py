@@ -123,10 +123,10 @@ class TAGEBase(SimObject):
     maxHist = Param.Unsigned(130, "Maximum history size of TAGE")
 
     tagTableTagWidths = VectorParam.Unsigned(
-        [0, 9, 9, 10, 10, 11, 11, 12], "Tag size in TAGE tag tables"
+        [0, 12, 12, 12, 12, 12, 12, 12], "Tag size in TAGE tag tables"
     )
     logTagTableSizes = VectorParam.Int(
-        [13, 9, 9, 9, 9, 9, 9, 9], "Log2 of TAGE table sizes"
+        [13, 8, 8, 8, 8, 8, 8, 8], "Log2 of TAGE table sizes"
     )
     logRatioBiModalHystEntries = Param.Unsigned(
         2,
@@ -161,6 +161,28 @@ class TAGEBase(SimObject):
         True, "Use speculative update for histories"
     )
 
+class DynamicTAGE(TAGEBase):
+    type = "DynamicTAGE"
+    cxx_class = "gem5::branch_prediction::DynamicTAGE"
+    cxx_header = "cpu/pred/dynamic_tage.hh"
+
+    entries_per_tile = Param.Unsigned(64, "Number of Entries Per Tile")
+    no_of_tiles = Param.Unsigned(21, "Total Number of Tiles")
+    current_configuration_vector = VectorParam.Int(
+        [13, 4, 4, 4, 4, 4, 4, 4], " Static Config Vector for Testing"
+    )
+
+    current_config = VectorParam.Int(
+        [13, 0, 0, 0, 0, 0, 0, 0], " Static Current Config for Testing"
+    )
+
+    #tagTableTagWidths = VectorParam.Int(
+    #    [0, 12, 12, 12, 12, 12, 12, 12], "Tag size in TAGE tag tables"
+    #)
+    #logTagTableSizes = VectorParam.Int(
+    #    [13, 8, 8, 8, 8, 8, 8, 8], "Log2 of TAGE table sizes"
+    #)
+    
 
 # TAGE branch predictor as described in https://www.jilp.org/vol8/v8paper1.pdf
 # The default sizes below are for the 8C-TAGE configuration (63.5 Kbits)
@@ -169,7 +191,7 @@ class TAGE(BranchPredictor):
     cxx_class = "gem5::branch_prediction::TAGE"
     cxx_header = "cpu/pred/tage.hh"
 
-    tage = Param.TAGEBase(TAGEBase(), "Tage object")
+    tage = Param.TAGEBase(DynamicTAGE(), "Tage object")
 
 
 class LTAGE_TAGE(TAGEBase):

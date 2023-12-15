@@ -45,8 +45,8 @@
  * one that predicted when the prediction is incorrect.
  */
 
-#ifndef __CPU_PRED_DYNAMIC_TAGE_HH__
-#define __CPU_PRED_DYNAMIC_TAGE_HH__
+#ifndef __CPU_PRED_TAGE_DYNAMIC_HH__
+#define __CPU_PRED_TAGE_DYNAMIC_HH__
 
 #include <vector>
 #include "params/DynamicTAGE.hh"
@@ -55,43 +55,59 @@
 
 namespace gem5
 {
-
-    namespace branch_prediction
-    {
-
-	class DynamicTAGE : public TAGEBase
-	{
-	public:
-	    DynamicTAGE(const DynamicTAGEParams &p);
-	    void init() override;
-
-	protected:
-	    const uint8_t entries_per_tile; //Number of entries per tile is fixed during runtime.
-	    const uint8_t no_of_tiles ; //Number of tiles is fixed during runtime
-	    //	    const uint8_t MaxNumberOfTilesInOneTable;
-	  /*	    struct Dynamic_TAGE_tile{
-		TageEntry *tile_entries; //Pointer to a dynamically allocated array of TageEntries. The number of entries is determined by entries_per_tile value.
-		int32_t tile_ID; //Tile ID can change during runtime. The tileID is gotten from the configuration vector.
-		std::vector<bool> associated_history_length; //Since a tile can be associated to any history length during runtime, this vector mimics the interconnect switch that specifies to which history length this tile is associated to.
-
-		}*/
-	    // Prediction Structures
-
-	    // Tage Entry struct from TAGEBase
-
-	public:
-
-	    /**
-	     * Dynamically Changes the TAGE Table size according to the configuration vector
-	     */
-	  virtual void dynamicallyConfigTAGETable(std::vector<uint8_t> configuration_vector);
-	  int8_t getCtr(int hitBank, int hitBankIndex) const;
-
-	    
-
-	};
+  
+  namespace branch_prediction
+  {
+    
+    class DynamicTAGE : public TAGEBase {
       
-    } // namespace branch_prediction
-} // namespace gem5
+    public:
+      DynamicTAGE(const DynamicTAGEParams &p);
+      void init() override;
+      void buildTageTables() override;
+      bool tagePredict(ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo* bi) override;
+      
+      
+    protected:
+      unsigned entries_per_tile; //Number of entries per tile is fixed during runtime.
+      unsigned no_of_tiles ; //Number of tiles is fixed during runtime
+      std::vector<int> current_configuration_vector;// = {5, 5, 5, 5, 5, 5, 5};
+      std::vector<int> current_config;// = {0, 0, 0, 0, 0, 0, 0}; 
+      TageEntry ***gtable;
 
+      //	    const uint8_t MaxNumberOfTilesInOneTable;
+      /*	    struct Dynamic_TAGE_tile{
+		    TageEntry *tile_entries; //Pointer to a dynamically allocated array of TageEntries. The number of entries is determined by entries_per_tile value.
+		    int32_t tile_ID; //Tile ID can change during runtime. The tileID is gotten from the configuration vector.
+		    std::vector<bool> associated_history_length; //Since a tile can be associated to any history length during runtime, this vector mimics the interconnect switch that specifies to which history length this tile is associated to.
+		    
+		    }*/
+      // Prediction Structures
+      
+      // Tage Entry struct from TAGEBase
+      
+    public:
+      
+      /**
+       * Dynamically Changes the TAGE Table size according to the configuration vector
+       */
+      virtual void dynamicallyConfigTAGETable(std::vector<int> configuration_vector);
+      //int8_t getCtr(int hitBank, int hitBankIndex) const;
+      
+      int calcTileIndex(int tableIndex){
+	      return tableIndex / no_of_tiles;
+      }
+      
+      int calcIndexWithinTile(int tableIndex){
+	        return tableIndex % no_of_tiles;
+      }
+      void handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi, int nrand) override;
+      void handleUReset() override;
+      void handleTAGEUpdate(Addr branch_pc, bool taken, BranchInfo* bi) override;
+     
+};
+
+} // namespace branch_prediction
+} // namespace gem5 
 #endif // __CPU_PRED_DYNAMIC_TAGE_HH__
+

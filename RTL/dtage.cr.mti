@@ -1,0 +1,16 @@
+C:/Users/AMD_001/Desktop/RTL/test.v {0 {vlog -work work -stats=none {C:\Users\AMD_001\Desktop\RTL\test.v}
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module dtage_tb
+** Error: C:\Users\AMD_001\Desktop\RTL\test.v(18): (vlog-2110) Illegal reference to memory "h".
+** Error: C:\Users\AMD_001\Desktop\RTL\test.v(18): (vlog-2110) Illegal reference to net array "#implicit-wire#3".
+** Error: C:\Users\AMD_001\Desktop\RTL\test.v(18): (vlog-2110) Illegal reference to memory "h".
+** Error: C:\Users\AMD_001\Desktop\RTL\test.v(18): (vlog-2110) Illegal reference to net array "#implicit-wire#3".
+
+} {4.0 8.0} {}} C:/Users/AMD_001/Desktop/RTL/dtage_logic.sv {1 {vlog -work work -sv -stats=none {C:\Users\AMD_001\Desktop\RTL\dtage_logic.sv}
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module dtage
+
+Top level modules:
+	dtage
+
+} {} {}}
